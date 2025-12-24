@@ -1,0 +1,5 @@
+.env
+.venv/
+data/raw/sales_increment.json
+data/raw/*.json
+!data/raw/state.json

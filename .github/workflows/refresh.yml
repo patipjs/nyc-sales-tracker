@@ -1,0 +1,33 @@
+name: Refresh NYC Sales
+
+on:
+  schedule:
+    - cron: "0 12 * * *" # daily 12:00 UTC
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install -r requirements.txt
+
+      - run: python src/ingest.py
+        env:
+          SOCRATA_APP_TOKEN: ${{ secrets.SOCRATA_APP_TOKEN }}
+
+      - run: python src/transform.py
+      - run: python src/metrics.py
+
+      - name: Commit updated outputs
+        run: |
+          git config user.name "nyc-sales-bot"
+          git config user.email "nyc-sales-bot@users.noreply.github.com"
+          git add data/processed data/raw/state.json
+          git commit -m "Daily refresh" || exit 0
+          git push
