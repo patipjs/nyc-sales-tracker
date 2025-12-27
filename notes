@@ -1,0 +1,5 @@
+#####
+
+Sample keys:
+['address', 'block', 'borough', 'building_class_at_present', 'building_class_at_time_of', 'building_class_category', 'commercial_units', 'gross_square_feet', 'land_square_feet', 'lot', 'neighborhood', 'residential_units', 'sale_date', 'sale_price', 'tax_class_at_present', 'tax_class_at_time_of_sale', 'total_units', 'year_built', 'zip_code']
+####

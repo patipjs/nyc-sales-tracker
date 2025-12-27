@@ -71,16 +71,16 @@ def main():
         )
         zip_monthly.to_parquet(OUT_ZIP, index=False)
 
-    # ==========================
-    # 3) PPSF METRICS (coverage)
-    # ==========================
+    # ========================
+    # 3) PPSF METRICS (simple)
+    # ========================
     # PPSF only where gross_sqft is present and positive.
     has_sqft = "gross_sqft" in df.columns
     if has_sqft:
         df_ppsf = df[(df["gross_sqft"] > 0)].copy()
         df_ppsf["ppsf"] = df_ppsf["sale_price"] / df_ppsf["gross_sqft"]
 
-        # Overall PPSF monthly + coverage
+        # Overall PPSF monthly
         ppsf_overall = (
             df_ppsf.groupby("month")
             .agg(
@@ -90,14 +90,10 @@ def main():
             .reset_index()
         )
 
-        total_sales = df.groupby("month").size().reset_index(name="total_sales")
-        ppsf_overall = ppsf_overall.merge(total_sales, on="month", how="left")
-        ppsf_overall["ppsf_coverage"] = ppsf_overall["ppsf_sales_count"] / ppsf_overall["total_sales"]
-
         ppsf_overall = add_rolling_median(ppsf_overall, "median_ppsf")
         ppsf_overall.to_parquet(OUT_PPSF_OVERALL, index=False)
 
-        # ZIP PPSF monthly + coverage
+        # ZIP PPSF monthly
         if "zip_code" in df.columns:
             ppsf_zip = (
                 df_ppsf.groupby(["zip_code", "month"])
@@ -107,16 +103,6 @@ def main():
                 )
                 .reset_index()
             )
-
-            # Add total sales per zip-month to compute coverage
-            total_zip = (
-                df.groupby(["zip_code", "month"])
-                .size()
-                .reset_index(name="total_sales")
-            )
-
-            ppsf_zip = ppsf_zip.merge(total_zip, on=["zip_code", "month"], how="left")
-            ppsf_zip["ppsf_coverage"] = ppsf_zip["ppsf_sales_count"] / ppsf_zip["total_sales"]
 
             ppsf_zip = ppsf_zip.groupby("zip_code", group_keys=False).apply(
                 lambda g: add_rolling_median(g, "median_ppsf")
